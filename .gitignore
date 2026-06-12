@@ -1,7 +1,6 @@
-js/vendor/firebaseinitialization.js
-.sass-cache
 node_modules/
+dist/
+coverage/
 .DS_Store
 npm-debug.log
-coverage/
-dist/
+*.local

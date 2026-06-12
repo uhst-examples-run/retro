@@ -1,0 +1,67 @@
+// Replaces the ngDialog vendor stylesheet from the AngularJS version.
+.modal {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 100;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+  position: relative;
+  margin: 60px auto;
+  font-family: 'Roboto', sans-serif;
+  background: #fafafa;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
+}
+
+.modal .modal-content button.modal-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  padding: 8px 10px;
+  margin: 0;
+  font-size: 1em;
+  color: #bbb;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+
+  &:hover {
+    color: #777;
+  }
+}
+
+.modal.danger .modal-content button.modal-close {
+  color: white;
+}
+
+// File input rendered as the inline "Upload" link in the import dialog.
+.file-upload-link {
+  cursor: pointer;
+  color: #3f51b5;
+
+  input[type='file'] {
+    display: none;
+  }
+}
+
+.modal .modal-content label.file-upload-link {
+  display: inline;
+  padding: 0;
+  font-size: inherit;
+}
