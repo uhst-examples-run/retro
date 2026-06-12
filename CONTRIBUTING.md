@@ -47,14 +47,14 @@ We are currently using 5 kinds of labels:
 * Make sure your changes are passing on the lints.
 
 ```
-npm run jshint
+pnpm typecheck
 ```
 
 * Make sure you have added the necessary tests for your changes. Every new method should have tests for it.
 * Run all the tests to ensure nothing else was accidentally broken.
 
 ```
-gulp test
+pnpm test
 ```
 
 ## Definition of done
