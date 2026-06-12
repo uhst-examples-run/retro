@@ -11,8 +11,10 @@ connect to you directly through the UHST relay.
 ## How it works
 
 - Creating a board makes your browser the UHST **host** for that board.
-  The board state is kept in your browser (and persisted to localStorage,
-  so reloading the page is fine).
+  The board id is assigned by the UHST relay when hosting starts (host
+  ids encode which relay serves the host). The board state is kept in
+  your browser (and persisted to localStorage, so reloading the page is
+  fine — the same relay-assigned id is requested again).
 - The board URL (`/#<board-id>`) is all anyone needs to join. Joining
   browsers connect as UHST peers, send their changes (new cards, votes,
   column edits, …) to the host, and the host broadcasts the updated board
@@ -65,6 +67,12 @@ src/
   utils/            # votes, csv, import/export helpers
   styles/           # SCSS ported from the original app
 ```
+
+## Deployment
+
+Every push to `main`/`master` is built and published to GitHub Pages by
+`.github/workflows/publish.workflow.yml` (the repository's Pages source
+must be set to "GitHub Actions" under Settings → Pages).
 
 ## Contribute to Fun Retro
 

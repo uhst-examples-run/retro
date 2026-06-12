@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useBoardSession } from '../hooks/useBoardSession';
+import type { BoardSessionState } from '../hooks/useBoardSession';
 import type { Message, SortField } from '../types';
 import { newMessage } from '../utils/messages';
 import {
@@ -38,6 +38,7 @@ export type BoardModal =
 
 interface BoardPageProps {
   boardId: string;
+  session: BoardSessionState;
   onNewBoard: () => void;
 }
 
@@ -46,8 +47,8 @@ function initialSortField(): SortField {
   return sort === 'votes' ? 'votes' : 'date_created';
 }
 
-export function BoardPage({ boardId, onNewBoard }: BoardPageProps) {
-  const { board, status, dispatch, deleteBoard } = useBoardSession(boardId);
+export function BoardPage({ boardId, session, onNewBoard }: BoardPageProps) {
+  const { board, status, dispatch, deleteBoard } = session;
   const [sortField, setSortField] = useState<SortField>(initialSortField);
   const [filterText, setFilterText] = useState('');
   const [sidebarOpened, setSidebarOpened] = useState(false);
