@@ -17,10 +17,17 @@ export type SessionStatus =
 export interface SessionCallbacks {
   onBoard(board: Board): void;
   onStatus(status: SessionStatus): void;
+  /** Fired when hosting a brand new board, once the relay assigns its id. */
+  onBoardId?(boardId: string): void;
 }
 
 export interface BoardSession {
   readonly isHost: boolean;
+  /**
+   * The board id. Known up front when joining or re-hosting; for a new
+   * board it is null until the relay assigns one (see onBoardId).
+   */
+  readonly boardId: string | null;
   dispatch(action: BoardAction): void;
   deleteBoard(): void;
   close(): void;
@@ -31,24 +38,40 @@ export interface BoardSession {
  * it applies every action (its own and the ones received from joined
  * peers), persists the result to localStorage and broadcasts the new
  * state to everyone.
+ *
+ * Host ids are assigned by the UHST relay (they encode which relay
+ * serves the host), so a new board is hosted without requesting an id
+ * and adopts the one delivered with the 'ready' event. Only when
+ * re-hosting an existing board do we request its previously assigned id.
  */
 class HostSession implements BoardSession {
   readonly isHost = true;
+  boardId: string | null;
   private host: UhstHost;
   private board: Board;
   private deleted = false;
+  private ready = false;
 
   constructor(
-    private boardId: string,
     board: Board,
-    private callbacks: SessionCallbacks
+    private callbacks: SessionCallbacks,
+    boardId?: string
   ) {
     this.board = board;
+    this.boardId = boardId ?? null;
 
     const uhst = new UHST();
     this.host = uhst.host(boardId);
 
     this.host.on('ready', () => {
+      this.ready = true;
+
+      if (this.boardId === null) {
+        this.boardId = this.host.hostId;
+        saveBoard(this.boardId, this.board);
+        this.callbacks.onBoardId?.(this.boardId);
+      }
+
       this.callbacks.onStatus('connected');
       this.callbacks.onBoard(this.board);
     });
@@ -59,6 +82,9 @@ class HostSession implements BoardSession {
         this.callbacks.onStatus('host_id_in_use');
       } else {
         console.error('UHST host error:', error);
+        if (!this.ready) {
+          this.callbacks.onStatus('closed');
+        }
       }
     });
 
@@ -85,7 +111,7 @@ class HostSession implements BoardSession {
   }
 
   dispatch(action: BoardAction): void {
-    if (this.deleted) {
+    if (this.deleted || this.boardId === null) {
       return;
     }
 
@@ -97,7 +123,11 @@ class HostSession implements BoardSession {
 
   deleteBoard(): void {
     this.deleted = true;
-    removeBoard(this.boardId);
+
+    if (this.boardId !== null) {
+      removeBoard(this.boardId);
+    }
+
     this.broadcast({ type: 'board_deleted' });
     this.callbacks.onStatus('deleted');
   }
@@ -125,10 +155,12 @@ class HostSession implements BoardSession {
  */
 class ClientSession implements BoardSession {
   readonly isHost = false;
+  readonly boardId: string;
   private socket: UhstSocket;
   private open = false;
 
   constructor(boardId: string, private callbacks: SessionCallbacks) {
+    this.boardId = boardId;
     const uhst = new UHST();
     this.socket = uhst.join(boardId);
 
@@ -205,8 +237,19 @@ export function openBoardSession(
   const ownBoard = forceClient ? null : loadBoard(boardId);
 
   if (ownBoard) {
-    return new HostSession(boardId, ownBoard, callbacks);
+    return new HostSession(ownBoard, callbacks, boardId);
   }
 
   return new ClientSession(boardId, callbacks);
+}
+
+/**
+ * Starts hosting a brand new board. The relay assigns the board id;
+ * it is reported through `callbacks.onBoardId` once known.
+ */
+export function createBoardSession(
+  board: Board,
+  callbacks: SessionCallbacks
+): BoardSession {
+  return new HostSession(board, callbacks);
 }
